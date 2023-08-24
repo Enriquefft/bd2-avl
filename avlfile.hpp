@@ -2,6 +2,7 @@
 #define AVL_FILE_HPP
 
 #include <cstdint>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -38,10 +39,12 @@ struct Record {
   void set_data() {
     cout << "Codigo:";
     cin >> cod;
-    cout << "Nombre: ";
-    cin >> nombre;
-    cout << "Ciclo: ";
-    cin >> ciclo;
+    // cout << "Nombre: ";
+    // cin >> nombre;
+    strncpy(nombre, "nombre", 6);
+    // cout << "Ciclo: ";
+    // cin >> ciclo;
+    ciclo = 1;
   }
 
   friend auto operator>>(istream &stream, Record &record) -> std::istream & {
@@ -103,9 +106,23 @@ public:
     }
   }
 
-  auto find(int key) -> Record { return find(m_pos_root, key); }
+  auto find(int key) -> Record {
 
-  void insert(Record record) { insert(m_pos_root, record); }
+    cout << "m_pos_root: " << m_pos_root << "\n";
+    cout << "key: " << key << "\n";
+
+    return find(m_pos_root, key);
+  }
+
+  void insert(Record record) {
+
+    if (m_pos_root == -1) {
+      m_pos_root = 0;
+      update_header(m_pos_root);
+    }
+
+    insert(m_pos_root, record);
+  }
 
   auto inorder() -> vector<Record> { return inorder(m_pos_root); }
 
@@ -152,6 +169,9 @@ inline auto AVLFile::read_metadata() -> bool {
     std::cerr << "ERROR: No se pudo leer la metadata\n";
     return false;
   }
+  cout << "Root pos: " << m_pos_root << '\n';
+  cout << "Record count: " << m_record_count << '\n';
+
   metadata.close();
   return true;
 }

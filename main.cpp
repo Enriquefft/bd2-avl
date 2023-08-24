@@ -15,19 +15,31 @@ void write_file(string filename) {
   }
 }
 
-void read_file(string filename) {
+[[maybe_unused]] void find_record(string filename) {
+
   AVLFile file(std::move(filename));
-  cout << "--------- show all sorted data -----------\n";
-  vector<Record> result = file.inorder();
-  for (Record record : result) {
-    cout << record;
-  }
+  int cod = 0;
+  std::cin >> cod;
+  auto record = file.find(cod);
+
+  std::cout << record;
 }
+
+// void read_file(string filename) {
+//   AVLFile file(std::move(filename));
+//   cout << "--------- show all sorted data -----------\n";
+//   vector<Record> result = file.inorder();
+//   for (Record record : result) {
+//     cout << record;
+//   }
+// }
 
 } // namespace
 
 int main() {
   write_file("data.dat");
-  read_file("data.dat");
+  find_record("data.dat");
+
+  // read_file("data.dat");
   return 0;
 }
