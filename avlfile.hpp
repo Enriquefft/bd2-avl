@@ -9,6 +9,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <fstream>
 
 using namespace std;
 
@@ -41,6 +42,16 @@ struct Record {
     cin >> nombre;
     cout << "Ciclo: ";
     cin >> ciclo;
+  }
+
+  friend auto operator>>(istream& stream, const Record &record) -> std::istream & {
+      char a;
+      stream >> (char*)&record.cod;
+      stream >> a;
+      stream.read((char*)&record.nombre, MAX_NAME_LENGTH);
+      stream >> a;
+      stream >> (char*)&record.ciclo;
+      return stream;
   }
 
   static auto size_in_bytes() -> size_t {
