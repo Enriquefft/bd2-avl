@@ -14,6 +14,13 @@ Record AVLFile::find(long pos_node, int key) {
 }
 
 void AVLFile::insert(long pos_node, Record record) {
+
+  // read pos_node
+  Record current{};
+
+  m_file_stream.open(m_filename, ios::in);
+  m_file_stream.seekg(pos_node);
+
   /*
   if (node == nullptr)
           node = new NodeBT<T>(value);
