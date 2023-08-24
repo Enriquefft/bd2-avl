@@ -103,7 +103,12 @@ public:
     }
   }
 
-  auto find(int key) -> Record { return find(m_pos_root, key); }
+  auto find(int key) -> Record {
+      if (m_pos_root == -1){
+          throw runtime_error("No hay datos en el arbol");
+      }
+      return find(m_pos_root, key);
+  }
 
   void insert(Record record) { insert(m_pos_root, record); }
 
