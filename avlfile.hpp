@@ -9,7 +9,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include <fstream>
 
 using namespace std;
 
@@ -22,8 +21,8 @@ struct Record {
   char nombre[MAX_NAME_LENGTH];
   int ciclo;
 
-  int64_t left;
-  int64_t right;
+  int64_t left = -1;
+  int64_t right = -1;
 
   friend auto operator<<(ostream &stream, const Record &record)
       -> std::ostream & {
@@ -45,14 +44,16 @@ struct Record {
     cin >> ciclo;
   }
 
-  friend auto operator>>(istream& stream, const Record &record) -> std::istream & {
-      char a;
-      stream >> (char*)&record.cod;
-      stream >> a;
-      stream.read((char*)&record.nombre, MAX_NAME_LENGTH);
-      stream >> a;
-      stream >> (char*)&record.ciclo;
-      return stream;
+  friend auto operator>>(istream &stream, Record &record) -> std::istream & {
+
+    char dump = 0;
+
+    stream.read(reinterpret_cast<char *>(&record.cod), sizeof(record.cod));
+    stream >> dump;
+    stream.read(reinterpret_cast<char *>(&record.nombre), MAX_NAME_LENGTH);
+    stream >> dump;
+    stream.read(reinterpret_cast<char *>(&record.ciclo), sizeof(record.ciclo));
+    return stream;
   }
 
   static auto size_in_bytes() -> size_t {
@@ -104,14 +105,7 @@ public:
 
   auto find(int key) -> Record { return find(m_pos_root, key); }
 
-  void insert(Record record) {
-
-    if (m_pos_root == -1) {
-      m_pos_root = 0;
-    }
-
-    insert(m_pos_root, record);
-  }
+  void insert(Record record) { insert(m_pos_root, record); }
 
   auto inorder() -> vector<Record> { return inorder(m_pos_root); }
 
