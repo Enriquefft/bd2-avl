@@ -1,24 +1,26 @@
 #include "avlfile.hpp"
 
 Record AVLFile::find(int64_t pos_node, int key) {
-  ifstream file(this->m_filename, ios::binary);
-  file.seekg(pos_node); // Vamos a la posición del nodo
-  // Leemos el record
-  Record record;
-  file >> record;
-  file.close();
+    if (pos_node != -1){
+        ifstream file(this->m_filename, ios::binary);
+        file.seekg(pos_node); // Vamos a la posición del nodo
+        // Leemos el record
+        Record record;
+        file >> record;
+        file.close();
 
-  if (record.cod == key) {
-      return record;
-  } else if (record.cod < key) {
-      // Se busca por el hijo izquierdo
-      return find(record.left, key);
-  } else if (record.cod > key) {
-      // Se busca por el hijo derecho
-      return find(record.right, key);
-  } else {
-      throw runtime_error("No se encontró la llave");
-  }
+        if (record.cod == key) {
+            return record;
+        } else if (record.cod < key) {
+            // Se busca por el hijo izquierdo
+            return find(record.left, key);
+        } else if (record.cod > key) {
+            // Se busca por el hijo derecho
+            return find(record.right, key);
+        } else {
+            throw runtime_error("No se encontró la llave");
+        }
+    }
 }
 
 void AVLFile::insert(int64_t pos_node, Record record) {
