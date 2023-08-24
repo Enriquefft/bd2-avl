@@ -26,6 +26,11 @@ struct Record {
     stream << " " << record.ciclo;
     return stream;
   }
+
+  static auto size_in_bytes() -> size_t {
+    return sizeof(int) + MAX_NAME_LENGTH + sizeof(int);
+    +sizeof(int64_t) + sizeof(int64_t) + 2;
+  }
 };
 #pragma pack(pop)
 
