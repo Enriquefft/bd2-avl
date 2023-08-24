@@ -52,7 +52,7 @@ struct Record {
 
 #pragma pack(push, 1)
 struct Metadata {
-  int64_t root_pos{0};
+  int64_t root_pos{-1};
   int64_t record_count{0};
   friend auto operator<<(ostream &stream, const Metadata &metadata)
       -> std::ostream & {
@@ -67,7 +67,7 @@ class AVLFile {
 private:
   std::string m_filename;
   std::fstream m_file_stream;
-  int64_t m_pos_root{0};
+  int64_t m_pos_root{-1};
   int64_t m_record_count{0};
 
   void open_or_create(const char *file_name);
@@ -77,20 +77,28 @@ private:
 public:
   explicit AVLFile(string filename) : m_filename(std::move(filename)) {
 
-    if (m_filename.substr(m_filename.size() - 4) != ".txt") {
+    auto file_end = m_filename.substr(m_filename.size() - 4);
+    if (file_end != ".txt" && file_end != ".dat") {
+
       throw std::invalid_argument("ERROR: El archivo debe ser .txt");
     }
 
     open_or_create(m_filename.data()); // Can throw
     if (!read_metadata()) {
       std::cerr << "ERROR: No se pudo leer la metadata, creando archivo\n";
-      update_header(0);
+      update_header(-1);
     }
   }
 
   auto find(int key) -> Record { return find(m_pos_root, key); }
 
-  void insert(Record record) { insert(m_pos_root, record); }
+  void insert(Record record) {
+
+    if (m_pos_root == -1) {
+    }
+
+    insert(m_pos_root, record);
+  }
 
   auto inorder() -> vector<Record> { return inorder(m_pos_root); }
 
