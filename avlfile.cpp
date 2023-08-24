@@ -1,24 +1,27 @@
 #include "avlfile.hpp"
 
 Record AVLFile::find(int64_t pos_node, int key) {
-  ifstream file(this->m_filename, ios::binary);
-  file.seekg(pos_node); // Vamos a la posición del nodo
-  // Leemos el record
-  Record record;
-  file >> record;
-  file.close();
+  if (pos_node != -1) {
+    ifstream file(this->m_filename, ios::binary);
+    file.seekg(pos_node); // Vamos a la posición del nodo
+    // Leemos el record
+    Record record;
+    file >> record;
+    file.close();
 
-  if (record.cod == key) {
-    return record;
-  } else if (record.cod < key) {
-    // Se busca por el hijo izquierdo
-    return find(record.left, key);
-  } else if (record.cod > key) {
-    // Se busca por el hijo derecho
-    return find(record.left, key);
-  } else {
-    throw runtime_error("No se encontró la llave");
+    if (record.cod == key) {
+      return record;
+    } else if (record.cod < key) {
+      // Se busca por el hijo izquierdo
+      return find(record.left, key);
+    } else if (record.cod > key) {
+      // Se busca por el hijo derecho
+      return find(record.right, key);
+    } else {
+      throw runtime_error("No se encontró la llave");
+    }
   }
+  return {};
 }
 
 void AVLFile::insert(int64_t pos_node, Record record) {
@@ -65,12 +68,40 @@ else
 */
 
 vector<Record> AVLFile::inorder(int64_t pos_node) {
+
   /*
-  if (node == nullptr)
-          return;
-  displayPreOrder(node->left);
-  cout << node->data << endl;
-  displayPreOrder(node->right);
-  */
-  return vector<Record>();
+   if (node == nullptr)
+           return;
+   displayPreOrder(node->left);
+   cout << node->data << endl;
+   displayPreOrder(node->right);
+   */
+  ifstream file(this->m_filename, ios::binary);
+
+  if (pos_node == -1) {
+    throw runtime_error("No hay datos en el arbol");
+  }
+
+  file.seekg(pos_node);
+  Record record;
+  file >> record;
+  file.close();
+  if (record.left == -1 && record.right == -1) {
+    return vector<Record>(1, record);
+  }
+  if (record.left == -1) {
+    vector<Record> right = inorder(record.right);
+    right.insert(right.begin(), record);
+    return right;
+  }
+  if (record.right == -1) {
+    vector<Record> left = inorder(record.left);
+    left.push_back(record);
+    return left;
+  }
+  vector<Record> left = inorder(record.left);
+  vector<Record> right = inorder(record.right);
+  left.push_back(record);
+  left.insert(left.end(), right.begin(), right.end());
+  return left;
 }
