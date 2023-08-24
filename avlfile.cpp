@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <ostream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -15,6 +16,16 @@ struct Record {
 
   int64_t left;
   int64_t right;
+
+  friend std::ostream &operator<<(ostream &stream, const Record &record) {
+
+    stream << record.cod << " ";
+
+    stream.write(static_cast<const char *>(record.nombre), MAX_NAME_LENGTH);
+
+    stream << " " << record.ciclo;
+    return stream;
+  }
 };
 #pragma pack(pop)
 
