@@ -34,6 +34,7 @@ struct Record {
     stream << " " << record.ciclo;
     return stream;
   }
+
   void set_data() {
     cout << "Codigo:";
     cin >> cod;
@@ -95,6 +96,7 @@ public:
   void insert(Record record) {
 
     if (m_pos_root == -1) {
+      m_pos_root = 0;
     }
 
     insert(m_pos_root, record);
