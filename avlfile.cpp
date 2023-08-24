@@ -1,14 +1,7 @@
 #include "avlfile.hpp"
 
 Record AVLFile::find(int64_t pos_node, int key) {
-
-  cout << "calling find with parameters: \t" << pos_node << "\t" << key << endl;
-
-  if (pos_node == -1) {
-    throw runtime_error("No hay datos en el arbol");
-  }
-
-  ifstream file(this->m_filename /* , ios::binary */);
+  ifstream file(this->m_filename, ios::binary);
   file.seekg(pos_node); // Vamos a la posición del nodo
   // Leemos el record
   Record record;

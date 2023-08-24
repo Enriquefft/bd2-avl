@@ -107,10 +107,9 @@ public:
   }
 
   auto find(int key) -> Record {
-
-    cout << "m_pos_root: " << m_pos_root << "\n";
-    cout << "key: " << key << "\n";
-
+    if (m_pos_root == -1) {
+      throw runtime_error("No hay datos en el arbol");
+    }
     return find(m_pos_root, key);
   }
 
