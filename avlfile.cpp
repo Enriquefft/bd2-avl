@@ -1,6 +1,6 @@
 #include "avlfile.hpp"
 
-Record AVLFile::find(long pos_node, int key) {
+Record AVLFile::find(int64_t pos_node, int key) {
   /*
   if (node == nullptr)
           return false;
@@ -11,16 +11,16 @@ Record AVLFile::find(long pos_node, int key) {
   else
           return true;
   */
+  ifstream file(this->m_filename, ios::binary);
+  file.seekg(pos_node); // Vamos a la posición del nodo
+  // Leemos el record
+  Record tmp;
+  file >> tmp;
+
+  return Record();
 }
 
-void AVLFile::insert(long pos_node, Record record) {
-
-  // read pos_node
-  Record current{};
-
-  m_file_stream.open(m_filename, ios::in);
-  m_file_stream.seekg(pos_node);
-
+void AVLFile::insert(int64_t pos_node, Record record) {
   /*
   if (node == nullptr)
           node = new NodeBT<T>(value);
@@ -31,7 +31,7 @@ void AVLFile::insert(long pos_node, Record record) {
   */
 }
 
-vector<Record> AVLFile::inorder(long pos_node) {
+vector<Record> AVLFile::inorder(int64_t pos_node) {
   /*
   if (node == nullptr)
           return;
@@ -39,4 +39,5 @@ vector<Record> AVLFile::inorder(long pos_node) {
   cout << node->data << endl;
   displayPreOrder(node->right);
   */
+    return vector<Record>();
 }
