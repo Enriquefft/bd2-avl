@@ -57,12 +57,12 @@ auto AVLFile::insert(int64_t pos_node, Record record) -> int64_t {
   if (current.cod < record.cod) {
     std::clog << "insert right" << std::endl;
     if (auto inserted_pos = insert(current.right, record)) {
-      // update_parent(pos_node, LR::RIGHT, inserted_pos);
+      update_parent(pos_node, LR::RIGHT, inserted_pos);
     }
   } else if (current.cod > record.cod) {
     std::clog << "insert left" << std::endl;
     if (auto inserted_pos = insert(current.left, record)) {
-      // update_parent(pos_node, LR::LEFT, inserted_pos);
+      update_parent(pos_node, LR::LEFT, inserted_pos);
     }
   }
   return 0;

@@ -18,15 +18,21 @@ constexpr string_view METADATA_FILE = "metadata.txt";
 
 #pragma pack(push, 1)
 struct Record {
-  int cod;
-  char nombre[MAX_NAME_LENGTH];
-  int ciclo;
+  int cod;                      // 4
+  char nombre[MAX_NAME_LENGTH]; // 12
+  int ciclo;                    // 4
 
-  int64_t left = -1;
-  int64_t right = -1;
+  int64_t left = -1;  // 8
+  int64_t right = -1; // 8
 
   friend auto operator<<(ostream &stream, const Record &record)
       -> std::ostream & {
+    stream << record.cod << ' ' << record.nombre << ' ' << record.ciclo << ' '
+           << record.left << ' ' << record.right << '\n';
+    return stream;
+  }
+  friend auto operator<<(fstream &stream, const Record &record)
+      -> std::fstream & {
     stream << record.cod << ' ' << record.nombre << ' ' << record.ciclo << ' '
            << record.left << ' ' << record.right << '\n';
     return stream;
@@ -40,7 +46,6 @@ struct Record {
   }
 
   friend auto operator>>(istream &stream, Record &record) -> std::istream & {
-
     stream.read(reinterpret_cast<char *>(&record), sizeof(record));
     return stream;
   }
@@ -184,10 +189,10 @@ inline void AVLFile::update_header(int64_t root_pos, int64_t size) {
 inline void AVLFile::update_parent(int64_t pos_parent, LR lr,
                                    int64_t pos_child) {
 
-  // cout << "Updating parent\n";
-  // cout << "Pos parent: " << pos_parent << '\n';
-  // cout << "LR: " << static_cast<char>(lr) << '\n';
-  // cout << "Pos child: " << pos_child << '\n';
+  cout << "Updating parent\n";
+  cout << "Pos parent: " << pos_parent << '\n';
+  cout << "LR: " << static_cast<char>(lr) << '\n';
+  cout << "Pos child: " << pos_child << '\n';
   //
   int64_t lr_pos = 0;
   // int cod;
@@ -204,11 +209,14 @@ inline void AVLFile::update_parent(int64_t pos_parent, LR lr,
              sizeof(int64_t);
   }
 
-  // cout << "LR pos: " << lr_pos << '\n';
+  cout << "LR pos: " << lr_pos << '\n';
 
   m_file_stream.open(m_filename.data(), std::ios::out | std::ios::binary);
   m_file_stream.seekp(lr_pos);
 
+  // Bug:
+  // This is not only overwriting the parent's left or right pointer
+  // but also the entire record itself
   m_file_stream.write(reinterpret_cast<char *>(&pos_child), sizeof(int64_t));
   m_file_stream.close();
 }
