@@ -27,41 +27,22 @@ struct Record {
 
   friend auto operator<<(ostream &stream, const Record &record)
       -> std::ostream & {
-
-    stream << record.cod << " ";
-
-    stream.write(static_cast<const char *>(record.nombre), MAX_NAME_LENGTH);
-
-    stream << " " << record.ciclo;
+    stream << record.cod << ' ' << record.nombre << ' ' << record.ciclo << ' '
+           << record.left << ' ' << record.right << '\n';
     return stream;
   }
 
   void set_data() {
     cout << "Codigo:";
     cin >> cod;
-    // cout << "Nombre: ";
-    // cin >> nombre;
     strncpy(nombre, "nombre", 6);
-    // cout << "Ciclo: ";
-    // cin >> ciclo;
     ciclo = 1;
   }
 
   friend auto operator>>(istream &stream, Record &record) -> std::istream & {
 
-    char dump = 0;
-
-    stream.read(reinterpret_cast<char *>(&record.cod), sizeof(record.cod));
-    stream >> dump;
-    stream.read(reinterpret_cast<char *>(&record.nombre), MAX_NAME_LENGTH);
-    stream >> dump;
-    stream.read(reinterpret_cast<char *>(&record.ciclo), sizeof(record.ciclo));
+    stream.read(reinterpret_cast<char *>(&record), sizeof(record));
     return stream;
-  }
-
-  static auto size_in_bytes() -> size_t {
-    return sizeof(int) + MAX_NAME_LENGTH + sizeof(int) + sizeof(int64_t) +
-           sizeof(int64_t) + 2;
   }
 };
 #pragma pack(pop)
@@ -86,9 +67,12 @@ private:
   int64_t m_pos_root{-1};
   int64_t m_record_count{0};
 
+  enum class LR : char { LEFT = 'L', RIGHT = 'R' };
+
   void open_or_create(const char *file_name);
   auto read_metadata() -> bool;
-  void update_header(int64_t pos, int64_t size = 0);
+  void update_header(int64_t pos, int64_t size);
+  void update_parent(int64_t pos_parent, LR lr, int64_t pos_child);
 
 public:
   explicit AVLFile(string filename) : m_filename(std::move(filename)) {
@@ -102,7 +86,7 @@ public:
     open_or_create(m_filename.data()); // Can throw
     if (!read_metadata()) {
       std::cerr << "ERROR: No se pudo leer la metadata, creando archivo\n";
-      update_header(-1);
+      update_header(-1, 0);
     }
   }
 
@@ -113,21 +97,35 @@ public:
     return find(m_pos_root, key);
   }
 
-  void insert(Record record) {
+  auto insert(Record record) -> bool {
+
+    int64_t inserted_pos = insert(m_pos_root, record);
 
     if (m_pos_root == -1) {
-      m_pos_root = 0;
-      update_header(m_pos_root);
+      m_pos_root = inserted_pos;
+      update_header(m_pos_root, m_record_count);
     }
-
-    insert(m_pos_root, record);
+    return inserted_pos != -1;
   }
 
   auto inorder() -> vector<Record> { return inorder(m_pos_root); }
+  auto load() -> vector<Record> {
+
+    m_file_stream.open(m_filename.data(), std::ios::in | std::ios::binary);
+
+    vector<Record> records;
+    Record record;
+    while (
+        m_file_stream.read(reinterpret_cast<char *>(&record), sizeof(record))) {
+      records.push_back(record);
+    }
+
+    return records;
+  }
 
 private:
   auto find(int64_t pos_node, int key) -> Record;
-  void insert(int64_t pos_node, Record record);
+  auto insert(int64_t pos_node, Record record) -> int64_t;
   auto inorder(int64_t pos_node) -> vector<Record>;
 };
 
@@ -168,8 +166,6 @@ inline auto AVLFile::read_metadata() -> bool {
     std::cerr << "ERROR: No se pudo leer la metadata\n";
     return false;
   }
-  cout << "Root pos: " << m_pos_root << '\n';
-  cout << "Record count: " << m_record_count << '\n';
 
   metadata.close();
   return true;
@@ -177,11 +173,44 @@ inline auto AVLFile::read_metadata() -> bool {
 
 inline void AVLFile::update_header(int64_t root_pos, int64_t size) {
 
-  m_record_count = root_pos;
+  m_record_count = size;
 
   std::ofstream metadata(METADATA_FILE.data(), std::ios::out);
   metadata << root_pos << ' ' << size << '\n';
+
   metadata.close();
+}
+
+inline void AVLFile::update_parent(int64_t pos_parent, LR lr,
+                                   int64_t pos_child) {
+
+  // cout << "Updating parent\n";
+  // cout << "Pos parent: " << pos_parent << '\n';
+  // cout << "LR: " << static_cast<char>(lr) << '\n';
+  // cout << "Pos child: " << pos_child << '\n';
+  //
+  int64_t lr_pos = 0;
+  // int cod;
+  // char nombre[MAX_NAME_LENGTH];
+  // int ciclo;
+  //
+  // int64_t left = -1;
+  // int64_t right = -1;
+
+  if (lr == LR::LEFT) {
+    lr_pos = pos_parent + sizeof(int) + MAX_NAME_LENGTH + sizeof(int);
+  } else {
+    lr_pos = pos_parent + sizeof(int) + MAX_NAME_LENGTH + sizeof(int) +
+             sizeof(int64_t);
+  }
+
+  // cout << "LR pos: " << lr_pos << '\n';
+
+  m_file_stream.open(m_filename.data(), std::ios::out | std::ios::binary);
+  m_file_stream.seekp(lr_pos);
+
+  m_file_stream.write(reinterpret_cast<char *>(&pos_child), sizeof(int64_t));
+  m_file_stream.close();
 }
 
 #endif // !AVL_FILE_HPP

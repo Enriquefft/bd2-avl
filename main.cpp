@@ -6,13 +6,23 @@ using namespace std;
 
 namespace {
 
+void print_records(string filename) {
+  AVLFile file(std::move(filename));
+  auto records = file.load();
+  for (auto record : records) {
+    cout << record;
+  }
+}
+
 void write_file(string filename) {
   AVLFile file(std::move(filename));
   Record record{};
-  for (int i = 0; i < 4; i++) {
-    record.set_data();
-    file.insert(record);
-  }
+  // for (int i = 0; i < 4; i++) {
+  record.set_data();
+  file.insert(record);
+  // record.set_data();
+  // file.insert(record);
+  // }
 }
 
 [[maybe_unused]] void find_record(string filename) {
@@ -38,7 +48,9 @@ void write_file(string filename) {
 
 int main() {
   write_file("data.dat");
-  find_record("data.dat");
+  print_records("data.dat");
+
+  // find_record("data.dat");
 
   // read_file("data.dat");
   return 0;
