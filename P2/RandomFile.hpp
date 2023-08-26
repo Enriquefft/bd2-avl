@@ -2,7 +2,6 @@
 #define RANDOM_FILE_HPP
 
 #include "RandomIndex.hpp"
-#include "Record.hpp"
 #include <string>
 
 constexpr std::string_view DEFAULT_DATA_FILE = "data.dat";

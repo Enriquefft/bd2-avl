@@ -211,7 +211,8 @@ inline void AVLFile::update_parent(int64_t pos_parent, LR lr,
 
   cout << "LR pos: " << lr_pos << '\n';
 
-  m_file_stream.open(m_filename.data(), std::ios::out | std::ios::binary);
+  m_file_stream.open(m_filename.data(),
+                     std::ios::in | std::ios::out | std::ios::binary);
   m_file_stream.seekp(lr_pos);
 
   // Bug:
