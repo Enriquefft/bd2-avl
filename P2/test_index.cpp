@@ -5,8 +5,11 @@ namespace {
 [[maybe_unused]] void write() {
 
   RandomIndex idx;
-  Record record(1, "n", 1);
-  idx.insert({1, record});
+  // Record record(1, "n", 1);
+  Record record(2, "n", 1);
+  Record record2(3, "n", 1);
+  idx.insert(record);
+  idx.insert(record2);
 }
 
 [[maybe_unused]] void read() {

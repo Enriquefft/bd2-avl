@@ -7,8 +7,10 @@
 
 constexpr std::string_view DEFAULT_INDEX_FILE = "index.dat";
 
-class RandomIndex : public std::unordered_map<Record::key_type, Record> {
-  using base_class = std::unordered_map<Record::key_type, Record>;
+class RandomIndex
+    : public std::unordered_map<Record::key_type, Record::RecordData> {
+
+  using base_class = std::unordered_map<Record::key_type, Record::RecordData>;
 
 public:
   // Inherit constructors
@@ -20,24 +22,21 @@ public:
 
     std::ifstream index(m_index_file, std::ios::binary);
 
-    Record::key_type key = 0;
     Record value;
 
     while (index.peek() != EOF) {
-      index.read(reinterpret_cast<char *>(&key), sizeof(key));
       index.read(reinterpret_cast<char *>(&value), sizeof(value));
 
       if (index.fail()) {
         throw std::runtime_error("Failed to read index file");
       }
-      emplace(key, value);
+      emplace(value);
     }
   }
   ~RandomIndex() {
     std::ofstream index(m_index_file, std::ios::binary);
-    for (const auto &[key, value] : *this) {
-      index.write(reinterpret_cast<const char *>(&key), sizeof(key));
-      index.write(reinterpret_cast<const char *>(&value), sizeof(value));
+    for (const auto &pair : *this) {
+      index.write(reinterpret_cast<const char *>(&pair), sizeof(pair));
     }
   }
 
