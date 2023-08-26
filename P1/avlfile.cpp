@@ -1,29 +1,35 @@
 #include "avlfile.hpp"
 
 auto AVLFile::find(int64_t pos_node, int key) -> Record {
+
   if (pos_node != -1) {
+
+    std::cout << "Searching at position: " << pos_node << std::endl;
 
     ifstream file(this->m_filename, ios::binary);
     file.seekg(pos_node); // Vamos a la posición del nodo
     // Leemos el record
     Record record;
-    file >> record;
+    file.read(reinterpret_cast<char *>(&record), sizeof(record));
+
+    std::cout << "Searching Record: " << record << std::endl;
 
     file.close();
 
     if (record.cod == key) {
       return record;
     }
-    if (record.cod < key) {
+    if (record.cod > key) {
       // Se busca por el hijo izquierdo
       return find(record.left, key);
     }
-    if (record.cod > key) {
+    if (record.cod < key) {
       // Se busca por el hijo derecho
       return find(record.right, key);
     }
     throw runtime_error("No se encontró la llave");
   }
+
   return {};
 }
 
