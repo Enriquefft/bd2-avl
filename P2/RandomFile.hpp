@@ -15,7 +15,9 @@ public:
   explicit RandomFile(std::string_view data_file = DEFAULT_DATA_FILE);
   ~RandomFile() = default; // Index is written on RandomIndex destructor
 
+  // Ana
   auto at(const key_type &key) -> data_type;
+  // Renato
   auto insert(const data_type &data) -> bool;
 
 private:
