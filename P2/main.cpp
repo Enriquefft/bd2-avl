@@ -20,12 +20,21 @@ namespace {
   }
 }
 
+[[maybe_unused]] void find() {
+  RandomIndex idx;
+
+  auto x = *idx.find(1);
+  std::cout << "Found 1\n";
+  std::cout << x.second << '\n';
+}
+
 } // namespace
 
 int main() {
 
-  write();
+  // write();
   read();
+  find();
 
   return 0;
 }
