@@ -33,6 +33,7 @@ public:
       emplace(value);
     }
   }
+
   ~RandomIndex() {
     std::ofstream index(m_index_file, std::ios::binary);
     for (const auto &pair : *this) {
