@@ -1,4 +1,4 @@
-#include "RandomIndex.hpp"
+#include "RandomFile.hpp"
 #include <iostream>
 
 namespace {
@@ -30,11 +30,29 @@ namespace {
 
 } // namespace
 
+void test_insert(RandomFile& rf) {
+    Record record(5, "a", 9);
+    Record record2(6, "b", 10);
+
+    rf.insert(record);
+    rf.insert(record2);
+}
+
+void test_at(RandomFile& rf) {
+    std::cout << rf.at(5) << std::endl;
+    std::cout << rf.at(6) << std::endl;
+}
+
 int main() {
 
   // write();
   read();
   find();
+
+  RandomFile rf;
+
+  test_insert(rf);
+  test_at(rf);
 
   return 0;
 }
