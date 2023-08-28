@@ -1,33 +1,42 @@
 #include "avlfile.hpp"
 
+using namespace FILESYSTEM;
+using std::ifstream;
+using std::ios;
+using std::vector;
+
 auto AVLFile::find(int64_t pos_node, int key) -> Record {
 
   if (pos_node != -1) {
 
-    std::cout << "Searching at position: " << pos_node << std::endl;
+    // std::cout << "Searching at position: " << pos_node << std::endl;
 
     ifstream file(this->m_filename, ios::binary);
     file.seekg(pos_node); // Vamos a la posición del nodo
     // Leemos el record
     Record record;
-    file.read(reinterpret_cast<char *>(&record), sizeof(record));
+    // file.read(reinterpret_cast<char *>(&record), sizeof(record));
+    file >> record;
 
-    std::cout << "Searching Record: " << record << std::endl;
+    // std::cout << "Searching Record: " << record << std::endl;
 
     file.close();
 
     if (record.cod == key) {
       return record;
     }
+
     if (record.cod > key) {
       // Se busca por el hijo izquierdo
       return find(record.left, key);
     }
+
     if (record.cod < key) {
       // Se busca por el hijo derecho
       return find(record.right, key);
     }
-    throw runtime_error("No se encontró la llave");
+
+    throw std::runtime_error("No se encontró la llave");
   }
 
   return {};
@@ -40,12 +49,15 @@ auto AVLFile::insert(int64_t pos_node, Record record) -> int64_t {
     // Insert at the end of the file
     m_file_stream.open(m_filename, ios::binary | ios::app | ios::out);
     pos_node = m_file_stream.tellp();
-    m_file_stream.write(reinterpret_cast<char *>(&record), sizeof(record));
+
+    // m_file_stream.write(reinterpret_cast<char *>(&record), sizeof(record));
+    m_file_stream << record;
+
     m_file_stream.close();
 
     update_header(m_pos_root, m_record_count + 1);
 
-    cout << "Insertado en la posición: " << pos_node << endl;
+    std::cout << "Insertado en la posición: " << pos_node << std::endl;
     return pos_node;
   }
 
@@ -83,7 +95,7 @@ else
         insert(node->right, value);
 */
 
-vector<Record> AVLFile::inorder(int64_t pos_node) {
+auto AVLFile::inorder(int64_t pos_node) -> std::vector<Record> {
 
   /*
    if (node == nullptr)
@@ -94,8 +106,10 @@ vector<Record> AVLFile::inorder(int64_t pos_node) {
    */
   ifstream file(this->m_filename, ios::binary);
 
+  std::cout << "calling for pos: " << pos_node << std::endl;
+
   if (pos_node == -1) {
-    throw runtime_error("No hay datos en el arbol");
+    throw std::runtime_error("No hay datos en el arbol");
   }
 
   file.seekg(pos_node);

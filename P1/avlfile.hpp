@@ -1,65 +1,22 @@
 #ifndef AVL_FILE_HPP
 #define AVL_FILE_HPP
 
-#include <cstdint>
-#include <cstring>
+#include "Record.hpp"
 #include <filesystem>
-#include <fstream>
-#include <iostream>
-#include <ostream>
-#include <string>
-#include <utility>
 #include <vector>
 
-using namespace std;
+namespace FILESYSTEM {
 
-constexpr size_t MAX_NAME_LENGTH = 12;
-constexpr string_view METADATA_FILE = "metadata.txt";
-
-#pragma pack(push, 1)
-struct Record {
-  int cod;                      // 4
-  char nombre[MAX_NAME_LENGTH]; // 12
-  int ciclo;                    // 4
-
-  int64_t left = -1;  // 8
-  int64_t right = -1; // 8
-
-  friend auto operator<<(ostream &stream, const Record &record)
-      -> std::ostream & {
-    stream << record.cod << ' ' << record.nombre << ' ' << record.ciclo << ' '
-           << record.left << ' ' << record.right << '\n';
-    return stream;
-  }
-  friend auto operator<<(fstream &stream, const Record &record)
-      -> std::fstream & {
-    stream << record.cod << ' ' << record.nombre << ' ' << record.ciclo << ' '
-           << record.left << ' ' << record.right << '\n';
-    return stream;
-  }
-
-  void set_data() {
-    cout << "Codigo:";
-    cin >> cod;
-    strncpy(nombre, "nombre", 6);
-    ciclo = 1;
-  }
-
-  friend auto operator>>(istream &stream, Record &record) -> std::istream & {
-    stream.read(reinterpret_cast<char *>(&record), sizeof(record));
-    return stream;
-  }
-};
-#pragma pack(pop)
+constexpr std::string_view METADATA_FILE = "metadata.txt";
+constexpr int64_t DEFAULT_ROOT_POS = -1;
 
 #pragma pack(push, 1)
 struct Metadata {
-  int64_t root_pos{-1};
+  int64_t root_pos{DEFAULT_ROOT_POS};
   int64_t record_count{0};
-  friend auto operator<<(ostream &stream, const Metadata &metadata)
+  friend auto operator<<(std::ostream &stream, const Metadata &metadata)
       -> std::ostream & {
-    stream << metadata.root_pos;
-    stream << metadata.record_count;
+    stream.write(reinterpret_cast<const char *>(&metadata), sizeof(metadata));
     return stream;
   }
 };
@@ -69,7 +26,7 @@ class AVLFile {
 private:
   std::string m_filename;
   std::fstream m_file_stream;
-  int64_t m_pos_root{-1};
+  int64_t m_pos_root{DEFAULT_ROOT_POS};
   int64_t m_record_count{0};
 
   enum class LR : char { LEFT = 'L', RIGHT = 'R' };
@@ -80,7 +37,7 @@ private:
   void update_parent(int64_t pos_parent, LR lr, int64_t pos_child);
 
 public:
-  explicit AVLFile(string filename) : m_filename(std::move(filename)) {
+  explicit AVLFile(std::string filename) : m_filename(std::move(filename)) {
 
     auto file_end = m_filename.substr(m_filename.size() - 4);
     if (file_end != ".txt" && file_end != ".dat") {
@@ -91,13 +48,13 @@ public:
     open_or_create(m_filename.data()); // Can throw
     if (!read_metadata()) {
       std::cerr << "ERROR: No se pudo leer la metadata, creando archivo\n";
-      update_header(-1, 0);
+      update_header(DEFAULT_ROOT_POS, 0);
     }
   }
 
   auto find(int key) -> Record {
-    if (m_pos_root == -1) {
-      throw runtime_error("No hay datos en el arbol");
+    if (m_pos_root == DEFAULT_ROOT_POS) {
+      throw std::runtime_error("No hay datos en el arbol");
     }
     return find(m_pos_root, key);
   }
@@ -106,19 +63,19 @@ public:
 
     int64_t inserted_pos = insert(m_pos_root, record);
 
-    if (m_pos_root == -1) {
+    if (m_pos_root == DEFAULT_ROOT_POS) {
       m_pos_root = inserted_pos;
       update_header(m_pos_root, m_record_count);
     }
-    return inserted_pos != -1;
+    return inserted_pos != DEFAULT_ROOT_POS;
   }
 
-  auto inorder() -> vector<Record> { return inorder(m_pos_root); }
-  auto load() -> vector<Record> {
+  auto inorder() -> std::vector<Record> { return inorder(m_pos_root); }
+  auto load() -> std::vector<Record> {
 
     m_file_stream.open(m_filename.data(), std::ios::in | std::ios::binary);
 
-    vector<Record> records;
+    std::vector<Record> records;
     Record record;
     while (
         m_file_stream.read(reinterpret_cast<char *>(&record), sizeof(record))) {
@@ -131,7 +88,7 @@ public:
 private:
   auto find(int64_t pos_node, int key) -> Record;
   auto insert(int64_t pos_node, Record record) -> int64_t;
-  auto inorder(int64_t pos_node) -> vector<Record>;
+  auto inorder(int64_t pos_node) -> std::vector<Record>;
 };
 
 inline void AVLFile::open_or_create(const char *file_name) {
@@ -165,12 +122,17 @@ inline auto AVLFile::read_metadata() -> bool {
   std::ifstream metadata(
       METADATA_FILE.data(),
       std::ios::in); // Already has been checked that it exists
+  Metadata header_data;
 
   // The record count must be readable
-  if (!(metadata >> m_pos_root >> m_record_count)) {
+  if (!(metadata.read(reinterpret_cast<char *>(&header_data),
+                      sizeof(header_data)))) {
     std::cerr << "ERROR: No se pudo leer la metadata\n";
     return false;
   }
+
+  m_record_count = header_data.record_count;
+  m_pos_root = header_data.root_pos;
 
   metadata.close();
   return true;
@@ -180,8 +142,11 @@ inline void AVLFile::update_header(int64_t root_pos, int64_t size) {
 
   m_record_count = size;
 
+  Metadata header_data{root_pos, size};
+
   std::ofstream metadata(METADATA_FILE.data(), std::ios::out);
-  metadata << root_pos << ' ' << size << '\n';
+
+  metadata << header_data;
 
   metadata.close();
 }
@@ -189,37 +154,23 @@ inline void AVLFile::update_header(int64_t root_pos, int64_t size) {
 inline void AVLFile::update_parent(int64_t pos_parent, LR lr,
                                    int64_t pos_child) {
 
-  cout << "Updating parent\n";
-  cout << "Pos parent: " << pos_parent << '\n';
-  cout << "LR: " << static_cast<char>(lr) << '\n';
-  cout << "Pos child: " << pos_child << '\n';
-  //
-  int64_t lr_pos = 0;
-  // int cod;
-  // char nombre[MAX_NAME_LENGTH];
-  // int ciclo;
-  //
-  // int64_t left = -1;
-  // int64_t right = -1;
+  int64_t lr_pos = lr == LR::LEFT ? Record::LEFT_OFFSET : Record::RIGHT_OFFSET;
+  lr_pos += pos_parent;
 
-  if (lr == LR::LEFT) {
-    lr_pos = pos_parent + sizeof(int) + MAX_NAME_LENGTH + sizeof(int);
-  } else {
-    lr_pos = pos_parent + sizeof(int) + MAX_NAME_LENGTH + sizeof(int) +
-             sizeof(int64_t);
-  }
-
-  cout << "LR pos: " << lr_pos << '\n';
+  // std::cout << "Updating parent\n";
+  //
+  // std::cout << "Parent pos: " << pos_parent << '\n';
+  // std::cout << "Child pos: " << pos_child << '\n';
+  // std::cout << "LR pos: " << lr_pos << '\n';
 
   m_file_stream.open(m_filename.data(),
                      std::ios::in | std::ios::out | std::ios::binary);
   m_file_stream.seekp(lr_pos);
 
-  // Bug:
-  // This is not only overwriting the parent's left or right pointer
-  // but also the entire record itself
   m_file_stream.write(reinterpret_cast<char *>(&pos_child), sizeof(int64_t));
   m_file_stream.close();
 }
+
+} // namespace FILESYSTEM
 
 #endif // !AVL_FILE_HPP
